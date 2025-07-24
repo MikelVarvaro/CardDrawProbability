@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Draw Probability Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Updated Babel URL to a working version -->
+  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    const Card = ({ className, children }) => (
+      <div className={`bg-white rounded-lg shadow-md ${className}`}>{children}</div>
+    );
+
+    const CardContent = ({ className, children }) => (
+      <div className={`p-4 ${className}`}>{children}</div>
+    );
+
+    const Input = ({ id, type, value, onChange, placeholder }) => (
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    );
+
+    const Button = ({ onClick, className, children }) => (
+      <button
+        onClick={onClick}
+        className={`bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 ${className}`}
+      >
+        {children}
+      </button>
+    );
+
+    const Label = ({ htmlFor, children }) => (
+      <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700">
+        {children}
+      </label>
+    );
+
+    function factorial(n) {
+      if (n === 0 || n === 1) return 1;
+      let result = 1;
+      for (let i = 2; i <= n; i++) result *= i;
+      return result;
+    }
+
+    function comb(n, k) {
+      if (k > n || k < 0) return 0;
+      return factorial(n) / (factorial(k) * factorial(n - k));
+    }
+
+    function calculateProbability(deckSize, numArtifacts, numLands, drawSize) {
+      let total = 0;
+      const numOther = deckSize - numArtifacts - numLands;
+
+      for (let a = 1; a <= Math.min(drawSize, numArtifacts); a++) {
+        for (let l = 2; l <= Math.min(drawSize - a, numLands); l++) {
+          const o = drawSize - a - l;
+          if (o >= 0 && o <= numOther) {
+            total += comb(numArtifacts, a) * comb(numLands, l) * comb(numOther, o);
+          }
+        }
+      }
+      const totalCombos = comb(deckSize, drawSize);
+      return (total / totalCombos) * 100;
+    }
+
+    function CardDrawCalculator() {
+      const [deckSize, setDeckSize] = useState(99);
+      const [numArtifacts, setNumArtifacts] = useState(12);
+      const [numLands, setNumLands] = useState(37);
+      const [drawSize, setDrawSize] = useState(7);
+      const [probability, setProbability] = useState(null);
+
+      const handleCalculate = () => {
+        const result = calculateProbability(deckSize, numArtifacts, numLands, drawSize);
+        setProbability(result.toFixed(2));
+      };
+
+      return (
+        <div className="p-6 max-w-2xl mx-auto">
+          <Card className="rounded-2xl shadow-lg border border-gray-200">
+            <CardContent className="p-6 space-y-6">
+              <h2 className="text-2xl font-bold text-center">🎴 Card Draw Probability Calculator</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="deckSize">Deck Size</Label>
+                  <Input
+                    id="deckSize"
+                    type="number"
+                    value={deckSize}
+                    onChange={(e) => setDeckSize(Number(e.target.value))}
+                    placeholder="e.g. 99"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="numArtifacts"># of Artifacts</Label>
+                  <Input
+                    id="numArtifacts"
+                    type="number"
+                    value={numArtifacts}
+                    onChange={(e) => setNumArtifacts(Number(e.target.value))}
+                    placeholder="e.g. 12"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="numLands"># of Lands</Label>
+                  <Input
+                    id="numLands"
+                    type="number"
+                    value={numLands}
+                    onChange={(e) => setNumLands(Number(e.target.value))}
+                    placeholder="e.g. 37"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="drawSize">Cards Drawn</Label>
+                  <Input
+                    id="drawSize"
+                    type="number"
+                    value={drawSize}
+                    onChange={(e) => setDrawSize(Number(e.target.value))}
+                    placeholder="e.g. 7"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <Button onClick={handleCalculate} className="w-full max-w-xs">Calculate</Button>
+              </div>
+              {probability !== null && (
+                <div className="text-xl font-semibold text-center text-green-700">
+                  ✅ Probability of drawing at least 1 artifact and 2 lands: {probability}%
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<CardDrawCalculator />);
+  </script>
+</body>
+</html>
